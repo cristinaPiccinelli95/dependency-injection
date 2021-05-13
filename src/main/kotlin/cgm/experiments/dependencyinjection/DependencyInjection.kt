@@ -1,14 +1,19 @@
 package cgm.experiments.dependencyinjection
 
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
+import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
+    lateinit var clazz : KClass<Any>
+
     inline fun <reified T> get(): T? {
-        TODO("Not yet implemented")
+        return clazz.constructors.first { it.parameters.isEmpty() }.call() as T?
     }
 
-    inline fun <reified T> add() {
-        TODO("Not yet implemented")
+    @Suppress("UNCHECKED_CAST")
+    inline fun <reified T: Any> add() {
+        clazz = T::class as KClass<Any>
     }
 
     fun <T: Any> add(clazz: KClass<T>) {
@@ -29,7 +34,7 @@ object DependencyInjection {
     }
 
     fun reset() {
-        TODO("Not yet implemented")
+        println("reset")
     }
 }
 
