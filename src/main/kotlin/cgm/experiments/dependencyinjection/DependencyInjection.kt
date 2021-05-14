@@ -8,7 +8,23 @@ object DependencyInjection {
     var listOfClazz = mutableListOf<KClass<Any>>()
 
     inline fun <reified T> get(): T? {
-        return listOfClazz.first { it == T::class }.constructors.first().call() as T?
+        //If I have a constructor without parameters return the first, otherwise return null
+        val clazz = listOfClazz.first { it == T::class }
+        val emptyConstructor: KFunction<Any>? =
+            clazz.constructors.firstOrNull { it.parameters.isEmpty() }
+
+        //If I have a constructor with parameters
+        if (emptyConstructor == null){
+            val param : List<Any> = clazz.constructors.first().parameters
+                .map { it.type.jvmErasure
+                    .constructors
+                    .first { it.parameters.isEmpty() }
+                    .call()
+                }
+            return clazz.constructors.first().call(*param.toTypedArray()) as T?
+        }
+
+        return emptyConstructor.call() as T?
     }
 
     @Suppress("UNCHECKED_CAST")
