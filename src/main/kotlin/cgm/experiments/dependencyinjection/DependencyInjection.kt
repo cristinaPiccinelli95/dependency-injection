@@ -1,7 +1,7 @@
 package cgm.experiments.dependencyinjection
 
 import kotlin.reflect.KClass
-import kotlin.reflect.KParameter
+import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
@@ -9,22 +9,22 @@ object DependencyInjection {
 
     inline fun <reified T> get(): T? {
         val clazz = listOfClazz.first { it == T::class }
+        var constructor = clazz.constructors.first()
 
-        val params = clazz.constructors.first().parameters
-            .map { param ->
-                val constructor2 = listOfClazz.first { it == param.type.jvmErasure }.constructors.first()
-                constructor2.takeIf { it.parameters.isNotEmpty() }
-                    ?.let { cons ->
-                        val param2 = cons.parameters
-                            .map { param2 ->
-                                listOfClazz.first { it == param2.type.jvmErasure }
-                                    .constructors.first().call() }
-                    constructor2.call(*param2.toTypedArray())}
-                    ?: constructor2.call()
-            }
+        return recursiveFun(constructor) as T?
+    }
 
-        return clazz.constructors.first().call(*params.toTypedArray()) as T?
-
+    fun recursiveFun(constructor: KFunction<Any>): Any {
+        return constructor
+            .call(*constructor.parameters
+                .map { param ->
+                    val cons = listOfClazz.first { it == param.type.jvmErasure }.constructors.first()
+                    if (cons.parameters.isNotEmpty()){
+                        recursiveFun(cons)
+                    }else{
+                        cons.call()
+                    }
+                }.toTypedArray())
     }
 
     @Suppress("UNCHECKED_CAST")
