@@ -1,6 +1,8 @@
 package cgm.experiments.dependencyinjection
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -26,6 +28,15 @@ class DependencyInjectionTests {
 
         val expected = Dependent(Dependency())
         DependencyInjection.get<Dependent>() shouldBe expected
+    }
+
+    @Test
+    fun `test fail creation of a class with one dependency`() {
+        DependencyInjection.add<Dependent>()
+
+        shouldThrow<NoSuchElementException>{
+            DependencyInjection.get<Dependent>()
+        }
     }
 
     @Test

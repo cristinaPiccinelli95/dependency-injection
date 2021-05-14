@@ -2,6 +2,7 @@ package cgm.experiments.dependencyinjection
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.cast
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
@@ -15,13 +16,14 @@ object DependencyInjection {
 
         //If I have a constructor with parameters
         if (emptyConstructor == null){
-            val param : List<Any> = clazz.constructors.first().parameters
-                .map { it.type.jvmErasure
-                    .constructors
-                    .first { it.parameters.isEmpty() }
-                    .call()
+            val params : List<Any> = clazz.constructors.first().parameters
+                .map { param ->
+                    listOfClazz.first { it == param.type.jvmErasure }
+                        .constructors
+                        .first()
+                        .call()
                 }
-            return clazz.constructors.first().call(*param.toTypedArray()) as T?
+            return clazz.constructors.first().call(*params.toTypedArray()) as T?
         }
 
         return emptyConstructor.call() as T?
