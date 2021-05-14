@@ -5,15 +5,15 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
-    lateinit var clazz : KClass<Any>
+    var listOfClazz = mutableListOf<KClass<Any>>()
 
     inline fun <reified T> get(): T? {
-        return clazz.constructors.first { it.parameters.isEmpty() }.call() as T?
+        return listOfClazz.first { it == T::class }.constructors.first().call() as T?
     }
 
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T: Any> add() {
-        clazz = T::class as KClass<Any>
+        listOfClazz.add(T::class as KClass<Any>)
     }
 
     fun <T: Any> add(clazz: KClass<T>) {
@@ -34,7 +34,7 @@ object DependencyInjection {
     }
 
     fun reset() {
-        println("reset")
+        listOfClazz = mutableListOf()
     }
 }
 
