@@ -1,32 +1,30 @@
 package cgm.experiments.dependencyinjection
 
 import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.cast
+import kotlin.reflect.KParameter
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
     var listOfClazz = mutableListOf<KClass<Any>>()
 
     inline fun <reified T> get(): T? {
-        //If I have a constructor without parameters return the first, otherwise return null
         val clazz = listOfClazz.first { it == T::class }
-        val emptyConstructor: KFunction<Any>? =
-            clazz.constructors.firstOrNull { it.parameters.isEmpty() }
 
-        //If I have a constructor with parameters
-        if (emptyConstructor == null){
-            val params : List<Any> = clazz.constructors.first().parameters
-                .map { param ->
-                    listOfClazz.first { it == param.type.jvmErasure }
-                        .constructors
-                        .first()
-                        .call()
-                }
-            return clazz.constructors.first().call(*params.toTypedArray()) as T?
-        }
+        val params = clazz.constructors.first().parameters
+            .map { param ->
+                val constructor2 = listOfClazz.first { it == param.type.jvmErasure }.constructors.first()
+                constructor2.takeIf { it.parameters.isNotEmpty() }
+                    ?.let { cons ->
+                        val param2 = cons.parameters
+                            .map { param2 ->
+                                listOfClazz.first { it == param2.type.jvmErasure }
+                                    .constructors.first().call() }
+                    constructor2.call(*param2.toTypedArray())}
+                    ?: constructor2.call()
+            }
 
-        return emptyConstructor.call() as T?
+        return clazz.constructors.first().call(*params.toTypedArray()) as T?
+
     }
 
     @Suppress("UNCHECKED_CAST")

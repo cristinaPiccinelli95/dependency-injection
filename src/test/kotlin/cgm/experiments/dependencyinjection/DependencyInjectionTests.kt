@@ -2,7 +2,6 @@ package cgm.experiments.dependencyinjection
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -43,7 +42,7 @@ class DependencyInjectionTests {
     fun `test creation of a class with more then one dependency`() {
         DependencyInjection.add<Dependency>()
         DependencyInjection.add<Dependency2>()
-        DependencyInjection.add<Dependent>()
+        DependencyInjection.add<Dependent>() //useless
         DependencyInjection.add<Dependent2>()
 
         val expected = Dependent2(Dependency2(), Dependency())
