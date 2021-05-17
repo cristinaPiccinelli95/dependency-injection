@@ -2,70 +2,64 @@ package cgm.experiments.dependencyinjection
 
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.isSubclassOf
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
-    var listOfClazz = mutableListOf<KClass<Any>>()
+    var container = mutableMapOf<KClass<Any>, KClass<Any>>()
 
-    inline fun <reified T> get(): T? {
-        var clazz = listOfClazz.first { it == T::class }
+    inline fun <reified T: Any> get(): T? {
+        return get(T::class)
+    }
 
-        clazz = interfaceToClass(clazz)
-        var constructor = clazz.constructors.first()
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> get(clazz: KClass<T>): T? {
+        val foundClazz = container[getContainerKey(clazz)] ?: return null
+
+        val constructor = foundClazz.constructors.minByOrNull { it.parameters.size } ?: return null
 
         return recursiveFun(constructor) as T?
     }
 
-    fun interfaceToClass(clazz: KClass<Any>): KClass<Any> {
-        var clazz1 = clazz
-        if (clazz1.isInterface()) {
-            clazz1 = listOfClazz.first { it.isSubclassOf(clazz1) && it != clazz1 }
-        }
-        return clazz1
-    }
+    @Suppress("UNCHECKED_CAST")
+    fun <T : Any> getContainerKey(kClass: KClass<T>): KClass<Any> = kClass as KClass<Any>
 
-    private fun KClass<Any>.isInterface(): Boolean = this.java.isInterface
-
-    fun recursiveFun(constructor: KFunction<Any>): Any {
+    private fun recursiveFun(constructor: KFunction<Any>): Any {
         return constructor
             .call(*constructor.parameters
                 .map { param ->
-                    val cons = listOfClazz.first { it == param.type.jvmErasure }.constructors.first()
-                    if (cons.parameters.isNotEmpty()){
+                    val cons = container[param.type.jvmErasure]?.constructors?.first()
+                    if (cons?.parameters?.isNotEmpty() == true){
                         recursiveFun(cons)
                     }else{
-                        cons.call()
+                        cons?.call()
                     }
                 }.toTypedArray())
     }
 
-    @Suppress("UNCHECKED_CAST")
     inline fun <reified T: Any> add() {
-        listOfClazz.add(T::class as KClass<Any>)
+        add(T::class)
     }
 
     fun <T: Any> add(clazz: KClass<T>) {
-        TODO("Not yet implemented")
+        container[getContainerKey(clazz)] = getContainerKey(clazz)
+    }
+
+    inline fun <reified T: Any, reified U: T> addI() {
+        addI(T::class, U::class)
     }
 
     @Suppress("UNCHECKED_CAST")
-    inline fun <reified T: Any, reified U: T> addI() {
-        listOfClazz.add(T::class as KClass<Any>)
-        listOfClazz.add(U::class as KClass<Any>)
-    }
-
     fun <T: Any, U: T> addI(interfaze: KClass<T>, clazz: KClass<U>) {
-        TODO("Not yet implemented")
+        container[getContainerKey(interfaze)] = clazz as KClass<Any>
     }
 
     @Suppress("UNCHECKED_CAST")
     inline fun <reified T: Any> add(noinline factoryFn: DependencyInjection.() -> T) {
-        TODO("Not yet implemented")
+        TODO()
     }
 
     fun reset() {
-        listOfClazz = mutableListOf()
+        container.clear()
     }
 }
 

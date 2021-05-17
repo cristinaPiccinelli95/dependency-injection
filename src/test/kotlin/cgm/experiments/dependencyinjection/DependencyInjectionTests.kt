@@ -30,15 +30,6 @@ class DependencyInjectionTests {
     }
 
     @Test
-    fun `test fail creation of a class with one dependency`() {
-        DependencyInjection.add<Dependent>()
-
-        shouldThrow<NoSuchElementException>{
-            DependencyInjection.get<Dependent>()
-        }
-    }
-
-    @Test
     fun `test creation of a class with more then one dependency`() {
         DependencyInjection.add<Dependency>()
         DependencyInjection.add<Dependency2>()
