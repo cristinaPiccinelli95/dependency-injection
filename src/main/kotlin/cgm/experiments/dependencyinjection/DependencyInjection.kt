@@ -17,22 +17,20 @@ object DependencyInjection {
 
         val constructor = foundClazz.constructors.minByOrNull { it.parameters.size } ?: return null
 
-        return recursiveFun(constructor) as T?
+        return when {
+            constructor.parameters.isEmpty() -> constructor.call() as T?
+            else -> callWithParams(constructor) as T?
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
     fun <T : Any> getContainerKey(kClass: KClass<T>): KClass<Any> = kClass as KClass<Any>
 
-    private fun recursiveFun(constructor: KFunction<Any>): Any {
+    private fun callWithParams(constructor: KFunction<Any>): Any {
         return constructor
             .call(*constructor.parameters
                 .map { param ->
-                    val cons = container[param.type.jvmErasure]?.constructors?.first()
-                    if (cons?.parameters?.isNotEmpty() == true){
-                        recursiveFun(cons)
-                    }else{
-                        cons?.call()
-                    }
+                    get(param.type.jvmErasure)
                 }.toTypedArray())
     }
 
