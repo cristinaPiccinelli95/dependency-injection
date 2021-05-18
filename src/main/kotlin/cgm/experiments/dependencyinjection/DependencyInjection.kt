@@ -4,7 +4,6 @@ import cgm.experiments.dependencyinjection.annotation.Injected
 import org.reflections.Reflections
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.javaType
 import kotlin.reflect.jvm.jvmErasure
 
 object DependencyInjection {
@@ -77,12 +76,11 @@ inline fun <T> di(function: DependencyInjection.() -> T): T = DependencyInjectio
 fun diAutoConfigure(packageName: String) {
     Reflections(packageName)
         .getTypesAnnotatedWith(Injected::class.java)
-        .forEach {
-            val clazz = it.kotlin
-            DependencyInjection.add(clazz)
-            clazz.supertypes
+        .forEach { clazz ->
+            DependencyInjection.add(clazz.kotlin)
+            clazz.kotlin.supertypes
                 .asSequence()
                 .map { DependencyInjection.getContainerKey(it.jvmErasure) }
-                .forEach { DependencyInjection.addI(it, clazz) }
+                .forEach { DependencyInjection.addI(it, clazz.kotlin) }
         }
 }
