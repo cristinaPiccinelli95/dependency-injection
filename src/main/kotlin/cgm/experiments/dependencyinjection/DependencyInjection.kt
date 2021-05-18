@@ -69,7 +69,7 @@ object DependencyInjection {
     }
 }
 
-inline fun <T> di(function: DependencyInjection.() -> T): T = TODO("Not yet implemented")
+inline fun <T> di(function: DependencyInjection.() -> T): T = DependencyInjection.function()
 
 fun diAutoConfigure(packageName: String) {
     TODO("Not yet implemented")
